@@ -1,6 +1,4 @@
 
-username="$1"
-password="$2"
 cout="/tmp/cookie1"
 cin="/tmp/cookie2"
 temp1="/tmp/temp1"
@@ -11,6 +9,12 @@ swap_cookies() {
     cout="$cin"
     cin="$ctemp"
 }
+
+# Reading username and password.
+read -p "Username: " username
+stty -echo
+read -p "Password: " password; echo
+stty echo
 
 # Initializing cookies and retrieving authentication salt.
 curl --cookie-jar "$cout" "https://minerva.ugent.be/secure/index.php?external=true" --output "$temp1"
@@ -31,6 +35,6 @@ curl --cookie "$cin" --cookie-jar "$cout" \
 swap_cookies
 
 # Retrieving header page to parse.
-curl --cookie "$cin" --cookie-jar "$cout" "http://minerva.ugent.be/index.php" ---output "$temp1"
+curl --cookie "$cin" --cookie-jar "$cout" "http://minerva.ugent.be/index.php" --output "$temp1"
 
 # Parsing $temp1 and retrieving minerva document tree.
