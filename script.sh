@@ -17,13 +17,15 @@ read -p "Password: " password; echo
 stty echo
 
 # Initializing cookies and retrieving authentication salt.
-curl --cookie-jar "$cout" "https://minerva.ugent.be/secure/index.php?external=true" --output "$temp1"
+echo -n "Initializing cookies and retrieving salt... "
+curl --cookie-jar "$cout" "https://minerva.ugent.be/secure/index.php?external=true" --output "$temp1" 2> /dev/null
 swap_cookies
 
-
 salt=$(cat "$temp1" | sed '/authentication_salt/!d' | sed 's/.*value="\([^"]*\)".*/\1/')
+echo "done."
 
 # Logging in.
+echo -n "Logging in as $username... "
 curl --cookie "$cin" --cookie-jar "$cout" \
     --data "login=$username" \
     --data "password=$password" \
@@ -31,10 +33,15 @@ curl --cookie "$cin" --cookie-jar "$cout" \
     --data "submitAuth=Log in" \
     --location \
     --output "$temp2" \
-        "https://minerva.ugent.be/secure/index.php?external=true"
+        "https://minerva.ugent.be/secure/index.php?external=true" 2> /dev/null
 swap_cookies
+echo "done."
 
 # Retrieving header page to parse.
-curl --cookie "$cin" --cookie-jar "$cout" "http://minerva.ugent.be/index.php" --output "$temp1"
+echo -n "Retrieving minerva home page... "
+curl --cookie "$cin" --cookie-jar "$cout" "http://minerva.ugent.be/index.php" --output "$temp1" 2> /dev/null
+echo "done."
 
 # Parsing $temp1 and retrieving minerva document tree.
+cat "$temp1" | sed '/course_home.php?cidReq=/!d' | # filter lines with a course link on it.
+    sed 's/.*course_home\.php?cidReq=\([^"]*\)">\([^<]*\)<.*/\2,\1/'
