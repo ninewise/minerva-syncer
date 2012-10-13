@@ -16,6 +16,12 @@ swap_cookies() {
     cin="$ctemp"
 }
 
+html_escape() {
+    # No more is needed, I think. Unless some scumbag teacher names his
+    # directories with weird characters...
+    echo "$1" | sed -e 's_/_%2F_g' -e 's/ /%20/g'
+}
+
 # Reading username and password.
 read -p "Username: " username
 stty -echo
@@ -24,7 +30,7 @@ stty echo
 
 # Initializing cookies and retrieving authentication salt.
 echo -n "Initializing cookies and retrieving salt... "
-curl --cookie-jar "$cout" "https://minerva.ugent.be/secure/index.php?external=true" --output "$temp1" 2> /dev/null
+curl -c "$cout" "https://minerva.ugent.be/secure/index.php?external=true" --output "$temp1" 2> /dev/null
 swap_cookies
 
 salt=$(cat "$temp1" | sed '/authentication_salt/!d' | sed 's/.*value="\([^"]*\)".*/\1/')
@@ -32,7 +38,7 @@ echo "done."
 
 # Logging in.
 echo -n "Logging in as $username... "
-curl --cookie "$cin" --cookie-jar "$cout" \
+curl -b "$cin" -c "$cout" \
     --data "login=$username" \
     --data "password=$password" \
     --data "authentication_salt=$salt" \
@@ -45,7 +51,7 @@ echo "done."
 
 # Retrieving header page to parse.
 echo -n "Retrieving minerva home page... "
-curl --cookie "$cin" --cookie-jar "$cout" "http://minerva.ugent.be/index.php" --output "$temp1" 2> /dev/null
+curl -b "$cin" -c "$cout" "http://minerva.ugent.be/index.php" --output "$temp1" 2> /dev/null
 echo "done."
 
 echo -n "Constructing Minerva Document tree... "
@@ -64,7 +70,7 @@ touch "$temptree"
 
         # Retrieving the course documents home.
         echo "$name ($link)"
-        curl --cookie "$cin" --cookie-jar "$cout" "$link" --output "$temp1" 2> /dev/null
+        curl -b "$cin" -c "$cout" "$link" --output "$temp1" 2> /dev/null
         swap_cookies
 
         # Parsing the directory structure from the selector.
@@ -75,11 +81,17 @@ touch "$temptree"
             sed 's/.*value="\([^"]*\)".*/\1/' # Filter the directory names.
         )
 
+        # For each directory.
         for folder in $folders; do
-            echo -n "" # TODO
-        done
+            # Retrieving directory.
+            curl -b "$cin" -c "$cout" "$link&curdirpath=$(html_escape $folder)" --output "$temp1" 2> /dev/null
+            swap_cookies
 
-        echo "$folders"
+            # Parsing files form the directory.
+            cat "$temp1" |
+                # Only lines with a file in.
+                sed '/minerva\.ugent\.be\/courses....\/'"$cidReq"'\/document\//!d'
+        done
 
         echo
     done
