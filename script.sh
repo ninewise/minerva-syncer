@@ -67,10 +67,16 @@ cat "$temp1" | sed '/course_home.php?cidReq=/!d' | # filter lines with a course 
 
 touch "$temptree"
 {
+    # Make a hidden file system for the synchronizing.
+    mkdir -p "$DESTDIR/.minerva"
+
     for course in $(cat "$temp2"); do
         name=$(echo "$course" | sed 's/,.*//')
         cidReq=$(echo "$course" | sed 's/.*,//')
         link="http://minerva.ugent.be/main/document/document.php?cidReq=$cidReq"
+
+        # Make a directory for the course.
+        mkdir -p "$DESTDIR/.minerva/$name"
 
         # Retrieving the course documents home.
         echo "$name ($link)"
@@ -87,12 +93,16 @@ touch "$temptree"
 
         # For each directory.
         for folder in $folders; do
+            # Make the folder in the hidden files system.
+            localdir="$DESTDIR/.minerva/$name/$folder"
+            mkdir -p "$localdir"
+
             # Retrieving directory.
             curl -b "$cin" -c "$cout" "$link&curdirpath=$(html_escape $folder)" --output "$temp1" 2> /dev/null
             swap_cookies
 
             # Parsing files from the directory.
-            cat "$temp1" |
+            files=$(cat "$temp1" |
                 # Only lines with a file or a date in. (First match: course site; second match: info site, third: date)
                 sed -n -e '/minerva\.ugent\.be\/courses....\/'"$cidReq"'\/document\//p' \
                        -e '/minerva\.ugent\.be\/courses_ext\/'"${cidReq%_*}"'ext\/document\//p' \
@@ -100,9 +110,16 @@ touch "$temptree"
                 # Extract file url.
                 sed 's|.*href="\([^"]*/document'"$folder"'[^"]*?cidReq='"$cidReq"'\)".*|\1|' | 
                 # Extract the date.
-                sed 's/.*\([0-9][0-9]\)\.\([0-9][0-9]\)\.\([0-9][0-9][0-9][0-9]\) \([0-9][0-9]\):\([0-9][0-9]\).*/"\2\/\1 \4:\5 \3"/' |
-                # Join each url with it's local file name and date.
-                sed -n '/http:/{N;s/\n/,/p;}' | sed 's/\(.*\)\/\([^\/]*\)?\(.*\)/&,'"$(sed_escape "$folder")"'\/\2/'
+                sed 's/.*\([0-9][0-9]\)\.\([0-9][0-9]\)\.\([0-9][0-9][0-9][0-9]\) \([0-9][0-9]\):\([0-9][0-9]\).*/\2\/\1_#_\4:\5_#_\3/' |
+                # Join each url with the file name and date.
+                sed -n '/http:/{N;s/\n/,/p;}' | sed 's/\(.*\)\/\([^\/]*\)?\(.*\)/&,\2/'
+            )
+            for file in $files; do
+                filename=${file#*,*,}
+                rest=${file%,*}
+                # TODO check if file exists, if so, check date.
+                echo "$rest" | sed -e 's/,/\n/' -e 's/_#_/ /g' > "$localdir/$filename.new"
+            done
         done
 
         echo
