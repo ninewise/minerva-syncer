@@ -87,10 +87,12 @@ touch "$temptree"
             curl -b "$cin" -c "$cout" "$link&curdirpath=$(html_escape $folder)" --output "$temp1" 2> /dev/null
             swap_cookies
 
-            # Parsing files form the directory.
+            # Parsing files from the directory.
             cat "$temp1" |
-                # Only lines with a file in.
-                sed '/minerva\.ugent\.be\/courses....\/'"$cidReq"'\/document\//!d'
+                # Only lines with a file in. (First match: course site; second match: info site)
+                sed -n -e '/minerva\.ugent\.be\/courses....\/'"$cidReq"'\/document\//p' \
+                       -e '/minerva\.ugent\.be\/courses_ext\/'"${cidReq%_*}"'ext\/document\//p' |
+                sed 's|.*href="\([^"]*/document'"$folder"'[^"]*?cidReq='"$cidReq"'\)".*|\1|'
         done
 
         echo
