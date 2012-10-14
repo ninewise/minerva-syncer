@@ -22,6 +22,10 @@ html_escape() {
     echo "$1" | sed -e 's_/_%2F_g' -e 's/ /%20/g'
 }
 
+sed_escape() {
+    echo "$1" | sed -e 's_/_\\/_g'
+}
+
 # Reading username and password.
 read -p "Username: " username
 stty -echo
@@ -89,10 +93,16 @@ touch "$temptree"
 
             # Parsing files from the directory.
             cat "$temp1" |
-                # Only lines with a file in. (First match: course site; second match: info site)
+                # Only lines with a file or a date in. (First match: course site; second match: info site, third: date)
                 sed -n -e '/minerva\.ugent\.be\/courses....\/'"$cidReq"'\/document\//p' \
-                       -e '/minerva\.ugent\.be\/courses_ext\/'"${cidReq%_*}"'ext\/document\//p' |
-                sed 's|.*href="\([^"]*/document'"$folder"'[^"]*?cidReq='"$cidReq"'\)".*|\1|'
+                       -e '/minerva\.ugent\.be\/courses_ext\/'"${cidReq%_*}"'ext\/document\//p' \
+                       -e '/[0-9][0-9]\.[0-9][0-9]\.[0-9][0-9][0-9][0-9] [0-9][0-9]:[0-9][0-9]/p' |
+                # Extract file url.
+                sed 's|.*href="\([^"]*/document'"$folder"'[^"]*?cidReq='"$cidReq"'\)".*|\1|' | 
+                # Extract the date.
+                sed 's/.*\([0-9][0-9]\)\.\([0-9][0-9]\)\.\([0-9][0-9][0-9][0-9]\) \([0-9][0-9]\):\([0-9][0-9]\).*/"\2\/\1 \4:\5 \3"/' |
+                # Join each url with it's local file name and date.
+                sed -n '/http:/{N;s/\n/,/p;}' | sed 's/\(.*\)\/\([^\/]*\)?\(.*\)/&,'"$(sed_escape "$folder")"'\/\2/'
         done
 
         echo
