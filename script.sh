@@ -1,4 +1,4 @@
-
+#!/bin/bash
 # CONFIG OPTIONS
 # TODO: enable choosing the following at first use and by command line parameters.
 DESTDIR=./Minerva
