@@ -12,7 +12,7 @@ fear testing, I've written no computer/Minerva breaking code.
 Notes
 -----
 
-Currently, all the script does is creating a file structure in the
-`./Minerva/.minerva` directory. Later, the actual files will be moved
-to the `./Minerva` directory (which you can specify in a config file
-etc).
+The script stores it's config file in `$XDG_CONFIG_HOME/minerva-syncer`.
+On the first run, you'll be able to choose some settings. For now,
+changing these settings it done manually by editing the `config` file.
+
