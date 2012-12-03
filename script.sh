@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 # Some constants.
 temp1="/tmp/temp1"
