@@ -6,6 +6,12 @@ temp2="/tmp/temp2"
 temptree="/tmp/temptree"
 home="https://minerva.ugent.be/"
 configdir="$XDG_CONFIG_HOME/minerva-syncer"
+dateparam="-d"
+if [ "$OSTYPE" == "linux-gnu" ]; then
+    dateparam="-d"
+elif [[ "$OSTYPE" == "darwin*" ]]; then
+    dateparam="-f"
+fi
 
 # Checks whether space separated $1 contains $2.
 contains() {
@@ -216,7 +222,7 @@ echo " done."
 # Filtering the list of files to check which are to be updated.
 echo "Downloading individual files... "
 # Retrieve the last update time.
-last=$(date +"%s" -d "$(head -1 "$datafile")")
+last=$(date +"%s" $dateparam "$(head -1 "$datafile")")
 for file in $(find "$destdir/.minerva/"); do
 
     localfile=${file/.minerva\//}
