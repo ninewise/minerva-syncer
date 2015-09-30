@@ -13,7 +13,7 @@ fear testing, I've written no computer/Minerva breaking code.
 Notes
 -----
 
-The script stores it's config file in `$XDG_CONFIG_HOME/minerva-syncer`.
+The script stores its config file in `$XDG_CONFIG_HOME/minerva-syncer`.
 On the first run, you'll be able to choose some settings. For now,
-changing these settings it done manually by editing the `config` file.
+changing these settings is done manually by editing the `config` file.
 
