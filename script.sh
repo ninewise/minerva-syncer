@@ -247,23 +247,23 @@ for file in $(find "$destdir/.minerva/"); do
         ours=$(stat -c %Y "$localfile")
         if (( ours > last && theirs > last )); then # Locally modified.
             read -p "$name was updated both local and online. Overwrite? [Y/n] " answer
-            while [ "$answer" != "y" ] && [ "$answer" != "n" ] && [ "$answer" != "" ]; do
+            while [ "${answer,,}" != "y" ] && [ "${answer,,}" != "n" ] && [ "$answer" != "" ]; do
                 read -p "please answer with y or n. [Y/n] " answer
             done
         fi
     else
         read -p "$name was created online. Download? [Y/n/never] " answer
-        while [ "$answer" != "y" ] && [ "$answer" != "n" ] && [ "$answer" != "" ] && [ "$answer" != "never" ]; do
+        while [ "${answer,,}" != "y" ] && [ "${answer,,}" != "n" ] && [ "$answer" != "" ] && [ "${answer,,}" != "never" ]; do
             read -p "please answer with y, n or never. [Y/n/never] " answer
         done
     fi
 
-    if [ "$answer" == "y" ] || [ "$answer" == "" ]; then # Download.
+    if [ "${answer,,}" == "y" ] || [ "$answer" == "" ]; then # Download.
         curl -b "$cin" -c "$cout" --output "$temp1" "$(head -1 "$file")"
         swap_cookies
         mv "$temp1" "$localfile"
     else
-        if [ "$answer" == "never" ]; then # Add to files not to download.
+        if [ "${answer,,}" == "never" ]; then # Add to files not to download.
             echo "$localfile" >> "$datafile"
         fi
     fi
